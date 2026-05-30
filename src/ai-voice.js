@@ -4,7 +4,7 @@
 // Memory : LocalStorage
 // ================================================================
 
-const GEMINI_API_KEY = 'AIzaSyCYVkpSk4HFL5Nb_hxrOJSKAq84PYK7o6U';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `Aap ek friendly, warm aur professional AI counselor hain — ISMM (Institute of Scale Model Making) ki taraf se. Aapka naam "Priya" hai. Aapko bilkul ek real insaan ki tarah baat karni hai, robot ki tarah nahi.
@@ -138,10 +138,21 @@ chatForm.addEventListener('submit', async (e) => {
 
   try {
     // Format history for Gemini API
-    const contents = chatHistory.map(msg => ({
+    let contents = chatHistory.map(msg => ({
       role: msg.role === 'model' || msg.role === 'ai' ? 'model' : 'user',
       parts: msg.parts
     }));
+
+    // Gemini API requires the first message to be from 'user'. Remove initial greeting if present.
+    if (contents.length > 0 && contents[0].role === 'model') {
+      contents.shift();
+    }
+    
+    // Ensure strict alternation (remove consecutive duplicates)
+    contents = contents.filter((msg, index, arr) => {
+      if (index === 0) return true;
+      return msg.role !== arr[index - 1].role;
+    });
 
     const payload = {
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
