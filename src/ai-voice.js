@@ -5,7 +5,7 @@
 // Mode   : Full-Duplex Live API (WebSocket)
 // ================================================================
 
-const GEMINI_API_KEY = 'AIzaSyB4WrDkkc52wrAcqL3h4oGhkUcNyz0Gc5E';
+const GEMINI_API_KEY = 'AIzaSyCYVkpSk4HFL5Nb_hxrOJSKAq84PYK7o6U';
 const MODEL_NAME     = 'models/gemini-2.0-flash-exp';
 const WS_URL         = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
