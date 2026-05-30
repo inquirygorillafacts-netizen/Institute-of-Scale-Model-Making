@@ -6,8 +6,8 @@
 // ================================================================
 
 const GEMINI_API_KEY = 'AIzaSyB4WrDkkc52wrAcqL3h4oGhkUcNyz0Gc5E';
-const MODEL_NAME     = 'models/gemini-2.5-flash-native-audio-preview-09-2025';
-const WS_URL         = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
+const MODEL_NAME     = 'models/gemini-2.0-flash-exp';
+const WS_URL         = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `Aap ek friendly, warm aur professional AI counselor hain — ISMM (Institute of Scale Model Making) ki taraf se. Aapka naam "Priya" hai aur aap ek ladki ki taraf se baat karti hain.
 
@@ -43,46 +43,43 @@ FAYDE:
 - Certificate industry mein recognized hai
 - ₹50,000+ per month easily kamao
 - Pan-India network
-- Live mentorship sessions
+- Polite raho aur "Aap" keh kar baat karo.
+- Chhote aur natural replies do, lambe paragraphs mat padho.
+- Aapko ISMM ke courses ke baare mein sab pata hai (3D Printing, Scale Model Making, AI Automation).
+- Agar koi puche "Kaise join karein?" toh kaho "Website par 'Apply Now' button dabayein ya call karein."`;
 
-FEES ke baare mein: "Fees aur batch details ke liye WhatsApp karein 8302806913 pe — wahan poori details mil jaayengi"
+// ── State ─────────────────────────────────────────────────────────────
+let ws = null;
+let audioCtx = null;
+let micStream = null;
+let processor = null;
+let playCtx = null;
+let nextPlayTime = 0;
+let isActive = false;
+let sessionReady = false;
+let aiTalking = false;
+let introSent = false;
 
-INTRO (JAB BAAT SHURU HO):
-Pehli baar connect hone par yeh intro do — bilkul natural tarike se:
-"Namaste! Main Priya hoon, ISMM ki AI counselor. Aap India ke pehle AI plus 3D Scale Model Institute ke baare mein jaan-ne aayi hain — bahut achha kiya! Scale model making, courses, ya admission ke baare mein jo bhi poochhna ho, main yahaan hoon. Batao, main aapki kaise help kar sakti hoon?"`;
-
-// ── State ──────────────────────────────────────────────────────
-let ws            = null;
-let audioCtx      = null;
-let micStream     = null;
-let processor     = null;
-let playCtx       = null;
-let nextPlayTime  = 0;
-let isActive      = false;
-let sessionReady  = false;
-let aiTalking     = false;
-let introSent     = false;
-
-// ── DOM ────────────────────────────────────────────────────────
+// ── Elements ──────────────────────────────────────────────────────────
+const aiFloatBtn   = document.getElementById('ai-floating-btn');
 const aiOverlay    = document.getElementById('ai-voice-overlay');
+const aiCloseBtn   = document.getElementById('ai-close-btn');
+const aiEndBtn     = document.getElementById('ai-end-btn');
 const aiStatusText = document.getElementById('ai-status-text');
 const aiAvatar     = document.getElementById('ai-avatar');
-const aiEndBtn     = document.getElementById('ai-end-btn');
-const aiFloatBtn   = document.getElementById('ai-floating-btn');
-const aiCloseBtn   = document.getElementById('ai-close-btn');
 
-// ── Avatar state ───────────────────────────────────────────────
+// ── UI State Manager ──────────────────────────────────────────────────
 function setAvatarState(state) {
-  // state: 'idle' | 'connecting' | 'listening' | 'speaking'
+  // state: 'idle' | 'connecting' | 'listening' | 'speaking' | 'ended'
   if (!aiAvatar) return;
   aiAvatar.className = 'ai-avatar-wrap';
   aiAvatar.classList.add('ai-avatar--' + state);
 
   const stateTexts = {
-    idle:       '🎤 Button dabao — baat karo!',
-    connecting: '🔗 AI se connect ho rahi hain...',
-    listening:  '👂 Bol rahe hain... sun rahi hoon!',
-    speaking:   '🗣️ Priya bol rahi hai...',
+    idle:       '⚡  Button dabao — baat karo!',
+    connecting: '⚡ AI se connect ho rahi hain...',
+    listening:  '🎙️ Bol rahe hain... sun rahi hoon!',
+    speaking:   '🔊 Priya bol rahi hai...',
     ended:      '📞 Call khatam. Phir milte hain!'
   };
   if (aiStatusText) aiStatusText.textContent = stateTexts[state] || '';
@@ -142,8 +139,16 @@ function openWebSocket() {
   };
 
   ws.onmessage = handleWsMessage;
-  ws.onerror   = () => { endCall(); };
-  ws.onclose   = () => { if (isActive) endCall(); };
+  ws.onerror = (e) => { 
+    console.error("WS Error:", e);
+    if (aiStatusText) aiStatusText.innerHTML = '<span class="text-danger">Connection Error. Please check API Key/Model.</span>';
+    setTimeout(() => { if (isActive) endCall(); }, 3000);
+  };
+  ws.onclose = (e) => { 
+    console.warn("WS Close:", e);
+    if (!sessionReady && aiStatusText) aiStatusText.innerHTML = `<span class="text-danger">Failed to connect: ${e.reason || 'Closed'}</span>`;
+    setTimeout(() => { if (isActive) endCall(); }, 3000);
+  };
 }
 
 // ── Handle incoming WS messages ────────────────────────────────
