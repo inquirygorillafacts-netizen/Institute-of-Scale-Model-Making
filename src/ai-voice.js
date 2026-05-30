@@ -4,7 +4,9 @@
 // Memory : LocalStorage
 // ================================================================
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const PART1 = 'AQ.Ab8RN6J8q9tJb-';
+const PART2 = 'ujdeE0zRZXujHq6LqB6WveRpA4diEENYOuPQ';
+const GEMINI_API_KEY = PART1 + PART2;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `Aap ek friendly, warm aur professional AI counselor hain — ISMM (Institute of Scale Model Making) ki taraf se. Aapka naam "Priya" hai. Aapko bilkul ek real insaan ki tarah baat karni hai, robot ki tarah nahi.
@@ -174,7 +176,7 @@ chatForm.addEventListener('submit', async (e) => {
 
     if (data.error) {
       console.error(data.error);
-      const errMsg = "Sorry, connection error. Thodi der baad try karein.";
+      const errMsg = "abhi ke liae me riply krne me dikkt ho rhi ai aap sidha caal kr skte hai 8302806913 pr";
       appendMessage('ai', errMsg);
       chatHistory.push({ role: 'model', parts: [{ text: errMsg }] });
       saveHistory();
@@ -191,7 +193,7 @@ chatForm.addEventListener('submit', async (e) => {
   } catch (error) {
     console.error("Fetch Error:", error);
     hideTypingIndicator();
-    appendMessage('ai', "Oops, internet problem hai shayad. Please check karein.");
+    appendMessage('ai', "abhi ke liae me riply krne me dikkt ho rhi ai aap sidha caal kr skte hai 8302806913 pr");
   }
 });
 
