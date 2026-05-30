@@ -276,11 +276,12 @@ function endCall() {
   setAvatarState('ended');
   if (aiEndBtn) aiEndBtn.style.display = 'none';
 
-  // Auto close overlay after 2s
+  // Close overlay instantly instead of waiting
+  aiOverlay.classList.remove('active');
   setTimeout(() => {
     aiOverlay.classList.add('d-none');
     setAvatarState('idle');
-  }, 2000);
+  }, 300);
 }
 
 // ── Helpers ───────────────────────────────────────────────────

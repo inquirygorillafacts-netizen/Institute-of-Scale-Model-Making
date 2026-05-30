@@ -69,22 +69,13 @@
     
     /* Mobile optimization */
     @media (max-width: 768px) {
-      .floating-btn { width: 55px; height: 55px; }
-      .floating-btn .icon { width: 26px; height: 26px; }
-      .floating-btn-container.left { left: 15px; }
-      .floating-btn-container.right { right: 15px; }
+      .floating-btn { width: 42px; height: 42px; }
+      .floating-btn .icon { width: 22px; height: 22px; }
+      .floating-btn-container.left { left: 10px; bottom: 15px; }
+      .floating-btn-container.right { right: 10px; bottom: 15px; }
+      .floating-btn-container.ai-container { bottom: 75px; right: 10px; }
+      .ai-label { font-size: 0.5rem !important; padding: 1px 5px !important; bottom: -8px !important; }
     }
-
-    /* ===================== */
-    /* AI Voice Assistant UI */
-    /* ===================== */
-    .floating-btn.ai {
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      bottom: 100px;
-    }
-    .floating-btn.ai .pulse-ring { border: 2px solid rgba(168, 85, 247, 0.8); }
-    .floating-btn-container.ai-container { bottom: 105px; right: 25px; }
-    @media (max-width: 768px) { .floating-btn-container.ai-container { bottom: 95px; right: 15px; } }
 
     /* ===================================== */
     /* AI Voice Overlay — Phone Call Style   */
@@ -314,6 +305,7 @@
       transition: all 0.2s;
     }
     #ai-close-btn:hover { background: rgba(0,0,0,0.1); color: #000; }
+    #ai-close-btn:focus, #ai-close-btn:active { outline: none; box-shadow: none; border: 1px solid rgba(0,0,0,0.1); }
 
     /* Floating AI button */
     .ai-label {
