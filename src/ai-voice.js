@@ -4,29 +4,25 @@
 // Memory : LocalStorage
 // ================================================================
 
-const PART1 = 'AQ.Ab8RN6J8q9tJb-';
-const PART2 = 'ujdeE0zRZXujHq6LqB6WveRpA4diEENYOuPQ';
-const GEMINI_API_KEY = PART1 + PART2;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_KEY = 'YOUR_API_KEY_HERE'; // Using the key from your .env
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-const SYSTEM_PROMPT = `Aap ek friendly, warm aur professional AI counselor hain — ISMM (Institute of Scale Model Making) ki taraf se. Aapka naam "Priya" hai. Aapko bilkul ek real insaan ki tarah baat karni hai, robot ki tarah nahi.
+const SYSTEM_PROMPT = `You are "Priya", a friendly, warm, and professional AI counselor for ISMM (Institute of Scale Model Making).
 
-BAHUT ZAROORI RULES (CRITICAL):
-- Hamesha Hinglish mein bolo (jaise WhatsApp par chat karte hain).
-- Jawab bilkul chhote aur seedhe hone chahiye (maximum 1-2 lines).
-- Lamba paragraph ya boring list kabhi mat dena! Agar user sikhna chahe, toh thoda-thoda karke batao.
-- Aap students se baat kar rahi hain, toh unki problem samjho, unhe motivate karo, aur unhe dost ki tarah guide karo.
-- 'Aap' ya 'Tum' keh kar respect se baat karo.
-- Agar koi sawal samajh na aaye, toh normally kaho "Arey sorry, iska idea nahi mujhe" ya phir directly institute ka number (8302806913) de do.
+CRITICAL RULES:
+1. ALWAYS respond in English by default. Your answers must be short and direct (maximum 1-2 lines).
+2. ONLY respond in Hindi (Hinglish) IF the user explicitly asks to speak in Hindi (e.g., "please in hindi", "hindi me baat kar").
+3. ONLY answer questions related to the Institute, its courses, admission, scale model making, or 3D printing. For any unrelated or unnecessary questions, politely refuse to answer and redirect the user.
+4. If you do not know the answer, say "I'm sorry, I don't have that information. Please call our institute directly at +91 85620 58189."
 
-INSTITUTE KI JANKARI:
-- Naam: Institute of Scale Model Making (ISMM) - Jaipur
+INSTITUTE INFORMATION:
+- Name: Institute of Scale Model Making (ISMM) - Jaipur
 - Founder: Ar. Rohitash Daiya
-- 6 Mahine ka AI + 3D Scale Model Training course (India ka pehla). Sirf 25 seats hain.
-- Placement support aur Certificate dono milte hain, course ke baad easily 50k+ kama sakte hain.
+- Course: 6 Months AI + 3D Scale Model Training (India's first). Only 25 seats available.
+- Benefits: Placement support and Certificate provided, easily earn 50k+ after the course.
 - Topics: 3D Modeling, CNC, LED Integration, Industrial Models.
 
-Hamesha yaad rakho: Aap ek cool aur helpful human counselor ho. Badi-badi AI wali baatein mat karna, short aur sweet chat karni hai!`;
+Remember: Keep it short, English only by default, and strictly stick to your purpose!`;
 
 // State
 let chatHistory = [];
@@ -146,15 +142,25 @@ chatForm.addEventListener('submit', async (e) => {
     }));
 
     // Gemini API requires the first message to be from 'user'. Remove initial greeting if present.
-    if (contents.length > 0 && contents[0].role === 'model') {
+    while (contents.length > 0 && contents[0].role === 'model') {
       contents.shift();
     }
     
-    // Ensure strict alternation (remove consecutive duplicates)
-    contents = contents.filter((msg, index, arr) => {
-      if (index === 0) return true;
-      return msg.role !== arr[index - 1].role;
-    });
+    // Ensure strict alternation
+    let validContents = [];
+    for (let msg of contents) {
+      if (validContents.length === 0) {
+        if (msg.role === 'user') validContents.push(msg);
+      } else {
+        let lastRole = validContents[validContents.length - 1].role;
+        if (msg.role !== lastRole) {
+          validContents.push(msg);
+        } else {
+          validContents[validContents.length - 1].parts[0].text += "\\n" + msg.parts[0].text;
+        }
+      }
+    }
+    contents = validContents;
 
     const payload = {
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
@@ -176,7 +182,7 @@ chatForm.addEventListener('submit', async (e) => {
 
     if (data.error) {
       console.error(data.error);
-      const errMsg = "abhi ke liae me riply krne me dikkt ho rhi ai aap sidha caal kr skte hai 8302806913 pr";
+      const errMsg = "I am having trouble replying right now. Please call us directly at +91 85620 58189.";
       appendMessage('ai', errMsg);
       chatHistory.push({ role: 'model', parts: [{ text: errMsg }] });
       saveHistory();
@@ -193,7 +199,7 @@ chatForm.addEventListener('submit', async (e) => {
   } catch (error) {
     console.error("Fetch Error:", error);
     hideTypingIndicator();
-    appendMessage('ai', "abhi ke liae me riply krne me dikkt ho rhi ai aap sidha caal kr skte hai 8302806913 pr");
+    appendMessage('ai', "I am having trouble replying right now. Please call us directly at +91 85620 58189.");
   }
 });
 
